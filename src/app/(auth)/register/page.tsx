@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { useRouter } from 'next/navigation';
-import NProgress from 'nprogress'; // Import NProgress
+import NProgress from 'nprogress';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,7 +17,7 @@ export default function RegisterPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    NProgress.start(); // Start the loader
+    NProgress.start();
     setError(null);
 
     const formData = new FormData(event.currentTarget);
@@ -29,7 +29,7 @@ export default function RegisterPage() {
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       setIsLoading(false);
-      NProgress.done(); // Stop the loader on validation error
+      NProgress.done();
       return;
     }
 
@@ -48,11 +48,15 @@ export default function RegisterPage() {
 
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred.');
+      }
     } finally {
       setIsLoading(false);
-      NProgress.done(); // Stop the loader
+      NProgress.done();
     }
   };
 
@@ -60,7 +64,7 @@ export default function RegisterPage() {
     <div className="w-full max-w-md mx-auto bg-[#13151a] p-8 rounded-2xl shadow-lg border border-gray-800">
       <div className="text-center mb-8">
         <Link href="/" className="text-2xl font-bold flex items-center justify-center space-x-2">
-            <Image src="/images/logo.png" alt="Wanzami Logo" width={32} height={32} />
+            <Image src="/logo.png" alt="Wanzami Logo" width={32} height={32} />
             <span className="font-bold text-xl text-white">Wanzami</span>
         </Link>
         <p className="text-gray-400 mt-2">Register to enjoy the features</p>
