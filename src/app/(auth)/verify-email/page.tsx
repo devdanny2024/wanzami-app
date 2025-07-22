@@ -19,9 +19,12 @@ export default function VerifyEmailPage() {
 
     const handleChange = (element: HTMLInputElement, index: number) => {
         if (isNaN(Number(element.value))) return;
+
         const newOtp = [...otp];
         newOtp[index] = element.value;
         setOtp(newOtp);
+
+        // Focus next input
         if (element.nextSibling && element.value) {
             (element.nextSibling as HTMLInputElement).focus();
         }
@@ -108,7 +111,18 @@ export default function VerifyEmailPage() {
                 <div>
                     <div className="flex justify-center space-x-2">
                         {otp.map((data, index) => (
-                            <input key={index} type="text" maxLength={1} className="w-14 h-16 text-center text-2xl font-bold rounded-lg border border-gray-700 bg-[#0B0C10] text-white focus:border-theme-orange focus:outline-none focus:ring-2 focus:ring-theme-orange" value={data} onChange={e => handleChange(e.target, index)} onKeyUp={e => handleKeyUp(e, index)} onFocus={e => e.target.select()} ref={el => inputRefs.current[index] = el} />
+                            <input
+                                key={index}
+                                type="text"
+                                name="otp"
+                                maxLength={1}
+                                className="w-14 h-16 text-center text-2xl font-bold rounded-lg border border-gray-700 bg-[#0B0C10] text-white focus:border-theme-orange focus:outline-none focus:ring-2 focus:ring-theme-orange"
+                                value={data}
+                                onChange={e => handleChange(e.target, index)}
+                                onKeyUp={e => handleKeyUp(e, index)}
+                                onFocus={e => e.target.select()}
+                                ref={el => { inputRefs.current[index] = el; }} // This line is fixed
+                            />
                         ))}
                     </div>
                 </div>
@@ -132,4 +146,48 @@ export default function VerifyEmailPage() {
             </div>
         </div>
     );
+}
+
+
+/*
+ * -----------------------------------------------------------------------------
+ * FILE: src/app/api/auth/verify/route.ts
+ *
+ * INSTRUCTIONS: No changes needed in this file.
+ */
+import { NextResponse } from "next/server";
+import {
+  CognitoIdentityProviderClient,
+  ConfirmSignUpCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
+
+const cognitoClient = new CognitoIdentityProviderClient({
+  region: process.env.AWS_REGION,
+});
+
+export async function POST(request: Request) {
+  try {
+    const { email, code } = await request.json();
+    if (!email || !code) {
+      return NextResponse.json({ error: "Email and verification code are required" }, { status: 400 });
+    }
+    const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID;
+    if (!COGNITO_CLIENT_ID) {
+      throw new Error("Cognito Client ID is not configured.");
+    }
+    const command = new ConfirmSignUpCommand({
+      ClientId: COGNITO_CLIENT_ID,
+      Username: email,
+      ConfirmationCode: code,
+    });
+    await cognitoClient.send(command);
+    return NextResponse.json({ message: "Account verified successfully." }, { status: 200 });
+  } catch (error) {
+    console.error("Verification Error:", error);
+    const errorMessage = (error instanceof Error && 'name' in error) ? (error as {name: string}).name : "An unexpected error occurred.";
+    const statusCode = (error instanceof Error && '$metadata' in error) ? (error as {$metadata: {httpStatusCode?: number}}).$metadata?.httpStatusCode || 500 : 500;
+    const errorDetails = (error instanceof Error) ? error.message : String(error);
+
+    return NextResponse.json({ error: errorMessage, details: errorDetails }, { status: statusCode });
+  }
 }
