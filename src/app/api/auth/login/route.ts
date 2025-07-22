@@ -6,7 +6,6 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { serialize } from 'cookie';
 
-// Initialize the Cognito Client
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION,
 });
@@ -15,7 +14,6 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
 
-    // Basic validation
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
@@ -28,7 +26,6 @@ export async function POST(request: Request) {
       throw new Error("Cognito Client ID is not configured.");
     }
 
-    // Prepare the command to send to Cognito
     const command = new InitiateAuthCommand({
       AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
       ClientId: COGNITO_CLIENT_ID,
@@ -38,14 +35,12 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send the command to Cognito
     const { AuthenticationResult } = await cognitoClient.send(command);
 
     if (!AuthenticationResult) {
         throw new Error("Authentication failed. Please check your credentials.");
     }
 
-    // --- Set Cookies ---
     const accessToken = AuthenticationResult.AccessToken;
     const idToken = AuthenticationResult.IdToken;
     const refreshToken = AuthenticationResult.RefreshToken;
@@ -55,7 +50,7 @@ export async function POST(request: Request) {
         secure: process.env.NODE_ENV !== 'development',
         sameSite: 'lax',
         path: '/',
-        maxAge: AuthenticationResult.ExpiresIn, // ExpiresIn is in seconds
+        maxAge: AuthenticationResult.ExpiresIn,
     });
 
     const idTokenCookie = serialize('IdToken', idToken || '', {
@@ -70,7 +65,6 @@ export async function POST(request: Request) {
     headers.append('Set-Cookie', accessTokenCookie);
     headers.append('Set-Cookie', idTokenCookie);
 
-    // The refresh token is typically stored more securely or with a longer expiry
     if (refreshToken) {
         const refreshTokenCookie = serialize('RefreshToken', refreshToken, {
             httpOnly: true,
@@ -87,12 +81,13 @@ export async function POST(request: Request) {
         headers: headers,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Login Error:", error);
     
-    const errorMessage = error.name || "An unexpected error occurred.";
-    const statusCode = error.$metadata?.httpStatusCode || 500;
+    const errorMessage = (error instanceof Error && 'name' in error) ? (error as {name: string}).name : "An unexpected error occurred.";
+    const statusCode = (error instanceof Error && '$metadata' in error) ? (error as {$metadata: {httpStatusCode?: number}}).$metadata?.httpStatusCode || 500 : 500;
+    const errorDetails = (error instanceof Error) ? error.message : String(error);
 
-    return NextResponse.json({ error: errorMessage, details: error.message }, { status: statusCode });
+    return NextResponse.json({ error: errorMessage, details: errorDetails }, { status: statusCode });
   }
 }
