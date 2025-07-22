@@ -21,7 +21,7 @@ const HeroSection = () => {
             {/* Image Background (Mobile Only) */}
             <div 
                 className="absolute top-0 left-0 w-full h-full z-[-1] block md:hidden bg-cover bg-center"
-                style={{ backgroundImage: `url('/images/mandalorian-hero.jpg')` }}
+                style={{ backgroundImage: `url('/images/mandalorian-hero.png')` }}
             >
                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/70 to-transparent" />
             </div>
