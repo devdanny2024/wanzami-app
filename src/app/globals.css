@@ -1,31 +1,37 @@
+/*
+ * FILE: src/app/globals.css
+ *
+ * INSTRUCTIONS: This file has been updated to use the modern Tailwind v4
+ * @theme directive for all customizations.
+ */
 @import "tailwindcss";
 
-:root {
-  --background: #0B0C10;
-  --foreground: #E5E7EB;
-}
-
+/*
+  This is where we define all our custom theme properties.
+  Tailwind will automatically use these variables.
+*/
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-theme-orange: #F97316;
 }
 
+
+/* --- Base Styles --- */
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: #0B0C10;
+  color: #E5E7EB;
 }
 
 /* --- NProgress Custom Styles --- */
 #nprogress .bar {
-  background: #22c55e !important; /* Green color */
+  background: var(--color-theme-orange) !important;
   height: 3px !important;
 }
 
 #nprogress .peg {
-  box-shadow: 0 0 10px #22c55e, 0 0 5px #22c55e !important;
+  box-shadow: 0 0 10px var(--color-theme-orange), 0 0 5px var(--color-theme-orange) !important;
 }
 
 #nprogress .spinner-icon {
-  border-top-color: #22c55e !important;
-  border-left-color: #22c55e !important;
+  border-top-color: var(--color-theme-orange) !important;
+  border-left-color: var(--color-theme-orange) !important;
 }

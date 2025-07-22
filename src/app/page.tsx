@@ -22,10 +22,10 @@ export default function WelcomePage() {
       <header className="absolute top-0 left-0 right-0 z-20 p-4 sm:p-6">
         <div className="container mx-auto flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold flex items-center">
-            <span className="bg-green-500 text-black px-2 py-1 rounded-md mr-2 font-extrabold text-lg">W</span>
+            <span className="bg-orange-500 text-black px-2 py-1 rounded-md mr-2 font-extrabold text-lg">W</span>
             <span className="font-bold text-xl">Wanzami</span>
           </Link>
-          <Link href="/login" className="bg-green-500 text-black px-4 py-2 rounded-md text-sm font-bold hover:bg-green-600 transition-colors">
+          <Link href="/login" className="bg-orange-500 text-black px-4 py-2 rounded-md text-sm font-bold hover:bg-orange-600 transition-colors">
             Sign In
           </Link>
         </div>
@@ -40,7 +40,7 @@ export default function WelcomePage() {
           Watch anywhere. Cancel anytime.
         </p>
         <div className="mt-8">
-          <Link href="/register" className="group bg-green-500 text-black font-bold text-xl md:text-2xl py-4 px-8 rounded-md inline-flex items-center space-x-2 hover:bg-green-600 transition-transform duration-200 ease-in-out hover:scale-105">
+          <Link href="/register" className="group bg-orange-500 text-black font-bold text-xl md:text-2xl py-4 px-8 rounded-md inline-flex items-center space-x-2 hover:bg-orange-600 transition-transform duration-200 ease-in-out hover:scale-105">
             <span>Sign Up</span>
             <ChevronRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
           </Link>
