@@ -10,7 +10,6 @@ const HeroSection = () => {
                 <video 
                     autoPlay 
                     loop 
-                    muted 
                     playsInline
                     className="w-full h-full object-cover"
                     src="/videos/1.mp4" // Your local video path
