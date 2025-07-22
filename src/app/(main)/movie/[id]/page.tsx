@@ -1,9 +1,7 @@
-
 import { notFound } from "next/navigation";
-import MovieDetailClient from "./MovieDetailClient"; // We will create this file next
+import MovieDetailClient from "./MovieDetailClient";
 
 // --- MOCK DATA ---
-// This data remains here, as it's fetched on the server.
 const allMoviesData = {
   "1": {
     id: "1",
@@ -42,7 +40,6 @@ const allMoviesData = {
         { num: 4, title: "Please Hold to My Hand", duration: "00:57:45", thumb: "/images/episodes/tlou-ep4.jpg"},
     ]
   },
-  // Add other movie/series data here...
 };
 
 const similarMovies = {
@@ -56,17 +53,20 @@ const similarMovies = {
 };
 // --- END MOCK DATA ---
 
+// Defining the props type. Note that `params` itself is the promise.
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
 
-// This is now a Server Component, so it can be async
-export default async function MovieDetailPage({ params }: { params: { id: string } }) {
-  // Find the movie data based on the ID from the URL. This is safe on the server.
-  const movie = allMoviesData[params.id as keyof typeof allMoviesData];
+// This is a Server Component, so we use async/await
+export default async function MovieDetailPage({ params }: PageProps) {
+  // As per the Next.js 15 docs, we must await the params object
+  const { id } = await params;
+  const movie = allMoviesData[id as keyof typeof allMoviesData];
 
-  // If no movie is found for the ID, show a 404 page
   if (!movie) {
     notFound();
   }
 
-  // Pass the fetched data to the Client Component for rendering
   return <MovieDetailClient movie={movie} similarMovies={similarMovies} />;
 }
