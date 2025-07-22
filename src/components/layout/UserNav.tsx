@@ -23,3 +23,4 @@ const UserNav = () => {
         </div>
     );
 };
+export default UserNav;
