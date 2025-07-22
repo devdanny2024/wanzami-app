@@ -5,18 +5,25 @@ const HeroSection = () => {
         <section 
             className="relative text-white pt-48 pb-20 -mt-20 h-[80vh] flex items-center overflow-hidden"
         >
-            {/* Video Background */}
-            <div className="absolute top-0 left-0 w-full h-full z-[-1]">
+            {/* Video Background (Desktop Only) */}
+            <div className="absolute top-0 left-0 w-full h-full z-[-1] hidden md:block">
                 <video 
                     autoPlay 
                     loop 
                     muted 
                     playsInline
                     className="w-full h-full object-cover"
-                    // IMPORTANT: Replace this placeholder with your local video file
-                    src="/videos/1.mp4" 
+                    src="/videos/1.mp4" // Your local video path
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/70 to-transparent" />
+            </div>
+
+            {/* Image Background (Mobile Only) */}
+            <div 
+                className="absolute top-0 left-0 w-full h-full z-[-1] block md:hidden bg-cover bg-center"
+                style={{ backgroundImage: `url('/images/mandalorian-hero.jpg')` }}
+            >
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/70 to-transparent" />
             </div>
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 z-10">
