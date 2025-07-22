@@ -1,11 +1,11 @@
 import { cookies } from 'next/headers';
 
 export async function getUserSession() {
-  const cookieStore = cookies();
+  // In Next.js 15, the cookies() object itself is a promise.
+  // We must await it before we can access individual cookies.
+  const cookieStore = await cookies(); 
   const idToken = cookieStore.get('IdToken');
 
-  // A simple check to see if the user is authenticated.
-  // In a real app, you might decode the token to get user info.
   const isLoggedIn = !!idToken;
 
   return { isLoggedIn };
