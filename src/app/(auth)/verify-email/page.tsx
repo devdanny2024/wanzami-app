@@ -48,8 +48,12 @@ export default function VerifyEmailPage() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.details || 'Failed to resend code.');
             setResendStatus({ loading: false, message: "A new code has been sent to your email.", error: false });
-        } catch (err: any) {
-            setResendStatus({ loading: false, message: err.message, error: true });
+        } catch (err) {
+            if (err instanceof Error) {
+                setResendStatus({ loading: false, message: err.message, error: true });
+            } else {
+                setResendStatus({ loading: false, message: 'An unexpected error occurred.', error: true });
+            }
         }
     };
 
@@ -74,8 +78,12 @@ export default function VerifyEmailPage() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.details || 'Verification failed.');
             router.push('/login?verified=true');
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('An unexpected error occurred.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -90,7 +98,7 @@ export default function VerifyEmailPage() {
                 </Link>
                 <h1 className="text-2xl font-bold mt-4">Verify Your Email</h1>
                 <p className="text-gray-400 mt-2">
-                    We've sent a 6-digit code to <span className="font-semibold text-theme-orange">{email || 'your email'}</span>.
+                    We&apos;ve sent a 6-digit code to <span className="font-semibold text-theme-orange">{email || 'your email'}</span>.
                 </p>
             </div>
             
@@ -115,7 +123,7 @@ export default function VerifyEmailPage() {
                 {resendStatus.message && (
                     <p className={`mb-2 ${resendStatus.error ? 'text-red-400' : 'text-green-400'}`}>{resendStatus.message}</p>
                 )}
-                <p>Didn't receive the code? 
+                <p>Didn&apos;t receive the code? 
                     <button onClick={handleResendCode} disabled={resendStatus.loading} className="font-medium text-theme-orange hover:underline disabled:opacity-50 disabled:cursor-not-allowed ml-1">
                         {resendStatus.loading ? 'Sending...' : 'Resend Code'}
                     </button>
