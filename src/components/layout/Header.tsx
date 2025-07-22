@@ -1,16 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Bell } from "lucide-react";
-import { getUserSession } from "@/lib/auth";
+import { getUserSession, getCurrentUser } from "@/lib/auth";
 import MobileNav from "./MobileNav";
 import UserNav from "./UserNav";
 
-// The Header is an async Server Component
 const Header = async () => {
   const { isLoggedIn } = await getUserSession();
+  const user = isLoggedIn ? await getCurrentUser() : null;
 
   const navLinks = [
-    { href: "/home", label: "Home" },
     { href: "/discover", label: "Discover" },
     { href: "/releases", label: "Movie Release" },
   ];
@@ -41,8 +40,8 @@ const Header = async () => {
               <Bell size={20} />
             </button>
             
-            {isLoggedIn ? (
-              <UserNav />
+            {isLoggedIn && user ? (
+              <UserNav user={user} />
             ) : (
               <Link href="/login" className="hidden lg:block bg-theme-orange text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-orange-600 transition-colors">
                 Login

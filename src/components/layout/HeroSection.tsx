@@ -1,19 +1,27 @@
 import { Play, Plus } from 'lucide-react';
-import Link from 'next/link';
 
 const HeroSection = () => {
     return (
         <section 
-            className="relative text-white pt-48 pb-20 -mt-20" // -mt-20 pulls it under the transparent header
-            style={{
-                backgroundImage: `linear-gradient(to top, rgba(11, 12, 16, 1) 10%, rgba(11, 12, 16, 0.5) 50%, rgba(11, 12, 16, 0.1) 100%), url('https://placehold.co/1920x1080/000000/FFFFFF?text=The+Mandalorian')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center top',
-            }}
+            className="relative text-white pt-48 pb-20 -mt-20 h-[80vh] flex items-center overflow-hidden"
         >
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Video Background */}
+            <div className="absolute top-0 left-0 w-full h-full z-[-1]">
+                <video 
+                    autoPlay 
+                    loop 
+                    muted 
+                    playsInline
+                    className="w-full h-full object-cover"
+                    // IMPORTANT: Replace this placeholder with your local video file
+                    src="/videos/1.mp4" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/70 to-transparent" />
+            </div>
+
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 z-10">
                 <div className="max-w-xl">
-                    <p className="text-green-400 font-semibold">Series</p>
+                    <p className="font-semibold text-theme-orange">Series</p>
                     <h1 className="text-5xl md:text-7xl font-extrabold my-4 tracking-tight">The Mandalorian</h1>
                     <div className="flex items-center space-x-4 text-gray-300 mb-6 text-sm md:text-base">
                         <span>9 Episodes</span>
@@ -23,7 +31,7 @@ const HeroSection = () => {
                         <span>Fantasy - Actions</span>
                     </div>
                     <div className="flex items-center space-x-4">
-                        <button className="bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-6 rounded-full transition-transform duration-200 ease-in-out hover:scale-105 flex items-center space-x-2">
+                        <button className="bg-theme-orange hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full transition-transform duration-200 ease-in-out hover:scale-105 flex items-center space-x-2">
                             <Play size={20} className="fill-current" />
                             <span>Continue Watching</span>
                         </button>
