@@ -1,40 +1,59 @@
+/*
+ * FILE: src/middleware.ts
+ *
+ * INSTRUCTIONS: This middleware has been updated with console.log statements
+ * for debugging the admin route protection.
+ */
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// This function is the middleware
 export function middleware(request: NextRequest) {
   const idToken = request.cookies.get('IdToken')?.value;
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
 
-  // Define which routes are only for logged-in users
+  // --- Admin Route Protection ---
+  if (pathname.startsWith('/admin')) {
+    const secretFromUrl = searchParams.get('secret');
+    const serverSecret = process.env.ADMIN_SECRET_KEY;
+
+    // --- DEBUGGING LOGS ---
+    // These will appear in the terminal where you run `npm run dev`
+    console.log("--- Admin Access Attempt ---");
+    console.log("Secret from URL:", secretFromUrl);
+    console.log("Secret from .env:", serverSecret);
+    console.log("Do they match?:", secretFromUrl === serverSecret);
+    console.log("--------------------------");
+    
+    if (secretFromUrl !== serverSecret) {
+      // If the secret is missing or incorrect, redirect to the homepage.
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    // If the secret is correct, allow access to the admin page.
+    return NextResponse.next();
+  }
+
+  // --- User Authentication Rules ---
   const protectedRoutes = ['/account', '/watchlist', '/discover'];
-  
-  // Define routes that logged-in users should NOT be able to access
   const publicOnlyRoutes = ['/login', '/register', '/'];
 
   const isAccessingProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   );
-
   const isAccessingPublicOnlyRoute = publicOnlyRoutes.includes(pathname);
 
-  // If user is not logged in and tries to access a protected route, redirect to login
   if (isAccessingProtectedRoute && !idToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If user is logged in and tries to access the welcome, login, or register page, redirect to discover
   if (idToken && isAccessingPublicOnlyRoute) {
     return NextResponse.redirect(new URL('/discover', request.url));
   }
 
-  // Otherwise, allow the request to proceed
   return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
