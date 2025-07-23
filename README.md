@@ -1,113 +1,74 @@
-Wanzami - Pay-Per-View Streaming Platform
-This document logs the development progress of the Wanzami streaming platform, a project built with Next.js and AWS.
+# Wanzami - Pay-Per-View Streaming Platform
 
-Project Overview
-Concept: A modern, pay-per-view (PPV) streaming service.
+**Wanzami** is a modern pay-per-view (PPV) streaming platform built using cutting-edge technologies like **Next.js 15**, **AWS Serverless Architecture**, and **Tailwind CSS**. Designed to offer a Netflix-style experience, Wanzami allows users to securely browse, watch, and manage media content with a robust authentication and content delivery system.
 
-Frontend: Next.js (App Router) with TypeScript and Tailwind CSS.
+---
 
-Backend: Serverless architecture using AWS services.
+## 🚀 Project Overview
 
-Authentication: AWS Cognito
+- **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS  
+- **Backend:** AWS Serverless (Cognito, DynamoDB, S3, Lambda via API routes)  
+- **Authentication:** AWS Cognito  
+- **Database:** AWS DynamoDB  
+- **File Storage:** AWS S3  
+- **Deployment:** Vercel  
 
-Database: AWS DynamoDB
+---
 
-File Storage: AWS S3
+## 📦 Features
 
-Deployment: Vercel
+### ✅ Foundation & Frontend
 
-Development Log
-Phase 1: Foundation & Frontend Scaffolding
-Project Initialization:
+- **Landing Page:** Netflix-inspired welcome screen for unauthenticated users
+- **Discover Page:** Dynamic hero section, movie carousels, and genre filters
+- **Movie Detail Page:** Dynamic routing for detailed movie/series information
+- **Reusable Layout:** Header and footer with a consistent dark theme
+- **Theming:** Custom orange accent color and smooth top loading bar (`nprogress`)
 
-Set up a new Next.js 15 project with TypeScript and Tailwind CSS.
+### 🔐 Authentication & User Management
 
-Established the core project structure, including app, components, lib, and api directories.
+- **Login & Registration:** Secure flows using AWS Cognito
+- **Email Verification:** Account confirmation with one-time email codes
+- **Session Management:** Secure, `httpOnly` cookie-based authentication
+- **Route Protection:** Middleware-based redirection for protected/public pages
+- **Account Page:** Users can manage their profile and change avatar
+- **Avatar Selection:** Choose from 10 pre-defined avatars
+- **Profile Update:** Username and avatar updates synced to Cognito
 
-UI Development (from Figma Designs):
+### 🎬 Content Management (In Progress)
 
-Welcome Page: Created a Netflix-inspired landing page for new visitors.
+- **Media Metadata:** Stored in a `wanzami-movies` table (DynamoDB)
+- **Media Files:** Stored in `wanzami-media-storage` S3 bucket
+- **Admin Upload Interface:**
+  - Secure access via a secret URL token
+  - Dynamic forms for movies vs. series (single vs. multi-file upload)
+- **Pre-signed Uploads:** S3 upload URLs generated via backend API
+- **Content Finalization:** Dynamically mark content as "AVAILABLE" in DynamoDB post-upload
 
-Discover Page: Built the main content discovery page with a dynamic video hero section and horizontally scrolling carousels.
+---
 
-Movie Detail Page: Implemented a dynamic route to display detailed information for individual movies and series.
+## 🛠️ Tech Stack
 
-Layout: Created a consistent main layout with a shared Header and Footer.
+| Layer        | Technology                  |
+|--------------|------------------------------|
+| Frontend     | Next.js 15, TypeScript       |
+| Styling      | Tailwind CSS, NProgress      |
+| Auth         | AWS Cognito                  |
+| Database     | AWS DynamoDB                 |
+| File Storage | AWS S3                       |
+| Hosting      | Vercel                       |
 
-Styling & Theming:
+---
 
-Configured Tailwind CSS for a dark theme based on the designs.
+## 📁 Project Structure
 
-Implemented a custom orange theme color (theme-orange) derived from the official Wanzami logo, applied to all interactive elements.
-
-Added a slim, theme-colored top loading bar (nprogress) to provide visual feedback during page navigation.
-
-Phase 2: Authentication & User Management
-Backend Setup (AWS Cognito):
-
-Created an AWS Cognito User Pool to manage user data and authentication.
-
-Configured the app client to allow secure user password authentication flows.
-
-Frontend Authentication Flow:
-
-Built the UI for the Login, Register, and Email Verification pages.
-
-Connected the forms to backend API endpoints.
-
-API Route Implementation:
-
-api/auth/register: Securely registers a new user in the Cognito User Pool.
-
-api/auth/login: Authenticates user credentials with Cognito and establishes a session using secure, httpOnly cookies.
-
-api/auth/verify: Confirms a new user's account using a code sent to their email.
-
-api/auth/logout: Clears session cookies to log the user out.
-
-Session Management & Security:
-
-Implemented a middleware.ts file to protect routes.
-
-Unauthenticated users are redirected from protected pages (like /discover and /account) to the login page.
-
-Authenticated users are redirected from public pages (like / and /login) to the discover page.
-
-Account & Profile Management:
-
-Account Page: Created a dedicated, protected page for users to manage their profiles.
-
-Avatar Selection: Implemented a feature allowing users to select from 10 preset avatars.
-
-Profile Updates: Built a backend API (api/auth/update-profile) that securely updates user attributes (username, picture) in Cognito. The Header now dynamically displays the user's chosen avatar.
-
-Phase 3: Content Management (In Progress)
-Backend Setup (AWS DynamoDB & S3):
-
-Created a wanzami-movies table in DynamoDB to store movie and series metadata.
-
-Created an S3 bucket (wanzami-media-storage) to store all media files (posters, videos, etc.).
-
-Configured a dedicated IAM user with scoped-down permissions (dynamodb:Scan, dynamodb:PutItem, s3:PutObject) for the application.
-
-Dynamic Content Loading:
-
-Created a api/movies endpoint to fetch all movie data from the DynamoDB table.
-
-Updated the Discover page to call this API, replacing the initial mock data with live data from the database.
-
-Admin Content Upload:
-
-Admin Page UI: Designed and built a comprehensive, secure admin page for uploading new content. The page is protected by a secret key passed via a URL parameter.
-
-Dynamic Form: The form dynamically adjusts to allow for single movie file uploads or multiple episode file uploads for a series.
-
-File Upload Backend:
-
-Created an API endpoint (api/admin/upload) that receives content metadata.
-
-This endpoint securely generates pre-signed URLs from S3 for each file.
-
-The frontend uses these URLs to upload files directly to the S3 bucket.
-
-A final API endpoint (api/admin/finalize-upload) updates the content's status in DynamoDB to "AVAILABLE" once all files are uploaded.
+```bash
+.
+├── app/               # App router structure for pages
+├── components/        # Reusable UI components
+├── lib/               # Utility functions (e.g., auth, db)
+├── api/               # API routes (Next.js serverless functions)
+├── styles/            # Tailwind and global styles
+├── public/            # Static assets
+├── middleware.ts      # Route protection
+└── tailwind.config.js # Custom theming
