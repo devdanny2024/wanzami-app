@@ -6,8 +6,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState, FormEvent } from "react";
 import { useRouter } from 'next/navigation';
 import NProgress from 'nprogress';
+import PasswordStrength from "@/components/auth/PasswordStrength";
 
 export default function RegisterPage() {
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -86,11 +88,21 @@ export default function RegisterPage() {
         <div>
             <label className="text-sm font-medium text-gray-300" htmlFor="password">Password</label>
             <div className="relative">
-                <input id="password" name="password" type={showPassword ? "text" : "password"} required className="mt-1 block w-full px-3 py-2 bg-[#0B0C10] border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-orange" placeholder="••••••••" />
+                <input 
+                    id="password" 
+                    name="password" 
+                    type={showPassword ? "text" : "password"} 
+                    required 
+                    className="mt-1 block w-full px-3 py-2 bg-[#0B0C10] border border-gray-700 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-orange" 
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white">
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
             </div>
+            <PasswordStrength password={password} />
         </div>
 
         <div>

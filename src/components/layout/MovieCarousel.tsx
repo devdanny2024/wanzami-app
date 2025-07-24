@@ -1,27 +1,25 @@
-import VideoCard from '@/components/video/VideoCard';
+import { VideoCard } from '@/components/video/VideoCard';
 
-interface Movie {
-    id: string;
-    title: string;
-    imgSrc: string;
+interface CarouselMovie { // Renamed to avoid conflicts within this file
+  id: string;
+  title: string;
+  imgSrc: string;
 }
 
 interface MovieCarouselProps {
-    title: string;
-    movies: Movie[];
+  title: string;
+  movies: CarouselMovie[];
 }
 
-const MovieCarousel = ({ title, movies }: MovieCarouselProps) => {
-    return (
-        <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-white">{title}</h2>
-            <div className="flex space-x-4 overflow-x-auto pb-4 -mb-4">
-                {movies.map((movie) => (
-                    <VideoCard key={movie.id} movie={movie} />
-                ))}
-            </div>
-        </div>
-    );
-};
-
-export default MovieCarousel;
+export default function MovieCarousel({ title, movies }: MovieCarouselProps) {
+  return (
+    <section>
+      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <div className="flex space-x-4 overflow-x-auto pb-4 -mx-4 px-4">
+        {movies.map((movie) => (
+          <VideoCard key={movie.id} movie={movie} />
+        ))}
+      </div>
+    </section>
+  );
+}

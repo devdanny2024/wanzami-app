@@ -1,95 +1,152 @@
-import { NextResponse } from "next/server";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-} from "@aws-sdk/lib-dynamodb";
+/*
+ * FILE: src/app/api/admin/upload/route.ts
+ *
+ * INSTRUCTIONS: This is the complete and corrected API route. It now uses
+ * the correct `getSignedUrl` method for generating pre-signed PUT URLs,
+ * and fixes a bug where topCast data was being overwritten.
+ */
+import { NextResponse } from 'next/server';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { randomUUID } from "crypto";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 
-// Initialize AWS Clients
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
-const dbClient = new DynamoDBClient({ region: process.env.AWS_REGION });
-const docClient = DynamoDBDocumentClient.from(dbClient);
+// --- AWS Clients Initialization ---
+const s3Client = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+});
 
-// Define the expected structure of the request body
-interface UploadRequestBody {
-    title: string;
-    description: string;
-    genres: string;
-    contentType: 'movie' | 'series';
-    files: {
-        key: 'poster' | 'backdrop' | 'trailer' | 'main';
-        name: string;
-        type: string;
-    }[];
-}
+const dynamoClient = new DynamoDBClient({ region: process.env.AWS_REGION });
+const docClient = DynamoDBDocumentClient.from(dynamoClient);
+const TABLE_NAME = "wanzami-movies";
 
-export async function POST(request: Request) {
-    try {
-        const body: UploadRequestBody = await request.json();
-        const { title, description, genres, contentType, files } = body;
+// --- Helper Function to handle both POST and PUT requests ---
+async function handleRequest(request: Request) {
+    const {
+        id, title, description, genres, contentType, topCast, files, secretKey
+    } = await request.json();
 
-        // Generate a unique ID for this new piece of content
-        const contentId = randomUUID();
-
-        // --- Step 1: Generate Pre-signed URLs for S3 Upload ---
-        const signedUrls = await Promise.all(
-            files.map(async (file) => {
-                const command = new PutObjectCommand({
-                    Bucket: process.env.S3_BUCKET_NAME,
-                    // Create a unique key for each file in S3
-                    Key: `content/${contentId}/${file.key}/${file.name}`,
-                    ContentType: file.type,
-                });
-
-                const signedUrl = await getSignedUrl(s3Client, command, {
-                    expiresIn: 3600, // URL expires in 1 hour
-                });
-
-                return {
-                    key: file.key,
-                    url: signedUrl,
-                };
-            })
-        );
-
-        // --- Step 2: Save Initial Metadata to DynamoDB ---
-        const fileLocations = files.reduce((acc, file) => {
-            acc[file.key] = `content/${contentId}/${file.key}/${file.name}`;
-            return acc;
-        }, {} as Record<string, string>);
-
-        const dbCommand = new PutCommand({
-            TableName: "wanzami-movies",
-            Item: {
-                id: contentId,
-                title,
-                description,
-                genres: genres.split(',').map(g => g.trim()), // Save genres as a list
-                contentType,
-                ...fileLocations,
-                createdAt: new Date().toISOString(),
-                status: 'PENDING_UPLOAD', // Mark as pending until files are uploaded
-            },
-        });
-
-        await docClient.send(dbCommand);
-
-        // --- Step 3: Return URLs to the Frontend ---
-        return NextResponse.json({
-            message: "Successfully initiated upload.",
-            contentId,
-            signedUrls,
-        });
-
-    } catch (error) {
-        console.error("Upload Initiation Error:", error);
-        const errorMessage = (error instanceof Error) ? error.message : "An unexpected error occurred.";
-        return NextResponse.json(
-            { error: "Failed to initiate upload", details: errorMessage },
-            { status: 500 }
-        );
+    // --- Security Check ---
+    if (secretKey !== process.env.ADMIN_SECRET_KEY) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
+
+    // --- Prepare File Paths and Pre-signed URLs ---
+    const filePaths: {
+        imgSrc?: string;
+        backdropSrc?: string;
+        trailerSrc?: string;
+        mainSrc: string | string[];
+        topCast: { name: string; imgSrc?: string }[];
+    } = {
+        mainSrc: contentType === 'series' ? [] : '',
+        topCast: []
+    };
+    
+    const presignedUrls: { [key: string]: string } = {};
+
+    const promises = files.map(async (file: { name: string; type: string; category: string }) => {
+        const keyPath = `content/${id}/${file.category}/${file.name.replace(/\s/g, '_')}`;
+        
+        const command = new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET_NAME!,
+            Key: keyPath,
+            ContentType: file.type,
+        });
+
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
+        presignedUrls[file.category] = signedUrl;
+
+        // Populate filePaths for database entry
+        if (file.category === 'poster') filePaths.imgSrc = keyPath;
+        else if (file.category === 'backdrop') filePaths.backdropSrc = keyPath;
+        else if (file.category === 'trailer') filePaths.trailerSrc = keyPath;
+        else if (file.category.startsWith('main')) {
+            if (Array.isArray(filePaths.mainSrc)) {
+                filePaths.mainSrc.push(keyPath);
+            } else {
+                filePaths.mainSrc = keyPath;
+            }
+        } else if (file.category.startsWith('cast')) {
+            const index = parseInt(file.category.split('-')[1], 10);
+            while (filePaths.topCast.length <= index) {
+                filePaths.topCast.push({ name: '', imgSrc: '' });
+            }
+            filePaths.topCast[index] = { ...filePaths.topCast[index], imgSrc: keyPath };
+        }
+    });
+
+    await Promise.all(promises);
+    
+    const finalCast = topCast.map((castMember: { name: string, hasPicture: boolean }, index: number) => {
+        const castPictureData = filePaths.topCast[index];
+        return {
+            name: castMember.name,
+            imgSrc: castPictureData?.imgSrc || ''
+        };
+    });
+
+    // --- Database Operation ---
+    if (request.method === 'POST') {
+        // Correctly exclude topCast from filePaths before spreading
+        const { topCast: _, ...otherFilePaths } = filePaths; 
+        const itemToCreate = {
+            id, title, description, genres, contentType,
+            topCast: finalCast,
+            status: 'PENDING_UPLOAD',
+            ...otherFilePaths
+        };
+        const putCommand = new PutCommand({
+            TableName: TABLE_NAME,
+            Item: itemToCreate,
+        });
+        await docClient.send(putCommand);
+
+    } else if (request.method === 'PUT') {
+        const getCommand = new GetCommand({ TableName: TABLE_NAME, Key: { id } });
+        const { Item: existingItem } = await docClient.send(getCommand);
+
+        const updateData: { [key: string]: any } = {
+            title, description, genres, contentType,
+            imgSrc: filePaths.imgSrc || existingItem?.imgSrc,
+            backdropSrc: filePaths.backdropSrc || existingItem?.backdropSrc,
+            trailerSrc: filePaths.trailerSrc || existingItem?.trailerSrc,
+            mainSrc: (Array.isArray(filePaths.mainSrc) && filePaths.mainSrc.length > 0) || (typeof filePaths.mainSrc === 'string' && filePaths.mainSrc) ? filePaths.mainSrc : existingItem?.mainSrc,
+            topCast: finalCast.length > 0 ? finalCast.map((newCast: { name: string, imgSrc: string }, index: number) => ({
+                name: newCast.name || existingItem?.topCast?.[index]?.name,
+                imgSrc: newCast.imgSrc || existingItem?.topCast?.[index]?.imgSrc || ''
+            })) : existingItem?.topCast
+        };
+        
+        const updateExpressionParts: string[] = [];
+        const expressionAttributeValues: { [key: string]: any } = {};
+        const expressionAttributeNames: { [key: string]: any } = {};
+
+        Object.entries(updateData).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && ( (Array.isArray(value) && value.length > 0) || !Array.isArray(value) ) ) {
+                updateExpressionParts.push(`#${key} = :${key}`);
+                expressionAttributeValues[`:${key}`] = value;
+                expressionAttributeNames[`#${key}`] = key;
+            }
+        });
+        
+        if (updateExpressionParts.length > 0) {
+            const updateCommand = new UpdateCommand({
+                TableName: TABLE_NAME,
+                Key: { id },
+                UpdateExpression: `SET ${updateExpressionParts.join(', ')}`,
+                ExpressionAttributeValues: expressionAttributeValues,
+                ExpressionAttributeNames: expressionAttributeNames,
+            });
+            await docClient.send(updateCommand);
+        }
+    }
+
+    return NextResponse.json({ signedUrls: presignedUrls });
 }
+
+export { handleRequest as POST, handleRequest as PUT };

@@ -1,28 +1,27 @@
 import { Play, Plus } from 'lucide-react';
 
-const HeroSection = () => {
+export const HeroSection = () => {
     return (
-        <section 
-            className="relative text-white pt-48 pb-20 -mt-20 h-[80vh] flex items-center overflow-hidden"
-        >
-            {/* Video Background (Desktop Only) */}
-            <div className="absolute top-0 left-0 w-full h-full z-[-1] hidden md:block">
+        <section className="relative text-white pt-48 pb-20 -mt-20 h-[80vh] flex items-center overflow-hidden">
+            {/* Background Container */}
+            <div className="absolute top-0 left-0 w-full h-full z-[-1]">
+                {/* Static Image Fallback for all screens, shown by default */}
+                <img 
+                    src="/images/mandalorian-hero.jpg" 
+                    alt="Hero background"
+                    className="w-full h-full object-cover md:hidden" // Hidden on medium screens and up
+                />
+                {/* Video Background for larger screens */}
                 <video 
                     autoPlay 
                     loop 
+                    muted
                     playsInline
-                    className="w-full h-full object-cover"
-                    src="/videos/1.mp4" // Your local video path
+                    className="w-full h-full object-cover hidden md:block" // Hidden on small screens
+                    src="/videos/1.mp4" 
                 />
+                {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/70 to-transparent" />
-            </div>
-
-            {/* Image Background (Mobile Only) */}
-            <div 
-                className="absolute top-0 left-0 w-full h-full z-[-1] block md:hidden bg-cover bg-center"
-                style={{ backgroundImage: `url('/images/mandalorian-hero.png')` }}
-            >
-                 <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/70 to-transparent" />
             </div>
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 z-10">
@@ -37,11 +36,11 @@ const HeroSection = () => {
                         <span>Fantasy - Actions</span>
                     </div>
                     <div className="flex items-center space-x-4">
-                        <button className="bg-theme-orange hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-full transition-transform duration-200 ease-in-out hover:scale-105 flex items-center space-x-2">
+                        <button className="button-primary flex items-center space-x-2">
                             <Play size={20} className="fill-current" />
                             <span>Continue Watching</span>
                         </button>
-                        <button className="bg-gray-700/50 hover:bg-gray-600/50 backdrop-blur-sm text-white font-bold py-3 px-6 rounded-full transition-transform duration-200 ease-in-out hover:scale-105 flex items-center space-x-2">
+                        <button className="button-secondary flex items-center space-x-2">
                             <Plus size={20} />
                             <span>Add Watchlist</span>
                         </button>
@@ -51,5 +50,3 @@ const HeroSection = () => {
         </section>
     );
 };
-
-export default HeroSection;

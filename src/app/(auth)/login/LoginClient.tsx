@@ -86,10 +86,18 @@ function LoginClient() {
             </div>
         </div>
         
-        <div className="text-right">
-            <Link href="/forgot-password" className="text-sm text-theme-orange hover:underline">
-                Forgot Password?
-            </Link>
+        <div className="flex items-center justify-between">
+            <div className="flex items-center">
+                <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-theme-orange focus:ring-theme-orange" />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-400">
+                    Remember me
+                </label>
+            </div>
+            <div className="text-sm">
+                <Link href="/forgot-password" className="font-medium text-theme-orange hover:underline">
+                    Forgot Password?
+                </Link>
+            </div>
         </div>
 
         <div>
